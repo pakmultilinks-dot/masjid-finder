@@ -1,1 +1,45 @@
-{"expo":{"android":{"adaptiveIcon":{"backgroundColor":"#0d5c3f","backgroundImage":"./assets/android-icon-background.png","foregroundImage":"./assets/android-icon-foreground.png","monochromeImage":"./assets/android-icon-monochrome.png"}},"icon":"./assets/icon.png","ios":{"supportsTablet":true},"name":"Masjid Finder","orientation":"portrait","plugins":["expo-router",["expo-location",{"locationWhenInUsePermission":"Masjid Finder needs your location to show the nearest mosques."}]],"scheme":"masjidfinder","slug":"masjid-finder","userInterfaceStyle":"light","version":"1.0.0","web":{"favicon":"./assets/favicon.png"}}}
+{
+  "expo": {
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0d5c3f",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true
+    },
+    "name": "Masjid Finder",
+    "orientation": "portrait",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Masjid Finder needs your location to show the nearest mosques."
+        }
+      ]
+    ],
+    "scheme": "masjidfinder",
+    "slug": "masjid-finder",
+    "userInterfaceStyle": "light",
+    "version": "1.0.0",
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "52830865-e310-4752-909a-1d2a083b4cd8"
+      }
+    },
+    "owner": "kominman"
+  }
+}
