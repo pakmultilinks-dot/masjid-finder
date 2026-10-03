@@ -65,6 +65,13 @@ export default function MosqueDetail() {
           Location from OpenStreetMap contributors. If this pin is wrong or this is
           not a mosque, you can report it below.
         </Text>
+        {!mosque.name && mosque.area && (
+          <Text style={s.noteText}>
+            This mosque has no mapped name yet, so it is shown by its area
+            ({mosque.area}). If you know its real name, please suggest it from the
+            Home tab so every mosque is named properly.
+          </Text>
+        )}
       </View>
 
       <Pressable style={s.ghostBtn} onPress={report}>

@@ -7,6 +7,8 @@ export interface Mosque {
   lat: number;
   lon: number;
   name: string | null;
+  // Real locality from reverse-geocoding, used only when the mapper gave no name.
+  area?: string | null;
   userAdded?: boolean;
 }
 
@@ -48,5 +50,11 @@ export function nearestMosques(
 }
 
 export function displayName(m: Mosque): string {
-  return m.name ?? 'Unnamed mosque';
+  if (m.name) return m.name;
+  if (m.area) return `Mosque near ${m.area}`;
+  return 'Unnamed mosque';
+}
+
+export function searchableText(m: Mosque): string {
+  return `${m.name ?? ''} ${m.area ?? ''}`.toLowerCase();
 }

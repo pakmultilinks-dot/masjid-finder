@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { C } from '../../theme';
 import { useLocation } from '../../hooks/useLocation';
 import { useNearest, useMosques } from '../../hooks/useMosques';
-import { formatDistance, displayName, type MosqueWithDistance } from '../../lib/geo';
+import { formatDistance, displayName, searchableText, type MosqueWithDistance } from '../../lib/geo';
 
 export default function Mosques() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function Mosques() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return sorted;
-    return sorted.filter((m) => (m.name ?? '').toLowerCase().includes(q));
+    return sorted.filter((m) => searchableText(m).includes(q));
   }, [sorted, query]);
 
   const renderItem = ({ item }: { item: MosqueWithDistance }) => (
@@ -96,7 +96,7 @@ const s = StyleSheet.create({
     backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
     fontSize: 15, borderWidth: 1, borderColor: C.line, color: C.ink,
   },
-  list: { padding: 16, paddingTop: 8, gap: 10 },
+  list: { padding: 16, paddingTop: 12, gap: 10 },
   card: {
     backgroundColor: '#fff', borderRadius: 16, padding: 16, flexDirection: 'row',
     alignItems: 'center', borderWidth: 1, borderColor: C.line,
