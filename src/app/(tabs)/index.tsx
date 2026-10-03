@@ -10,6 +10,7 @@ import { useNearest, useMosques } from '../../hooks/useMosques';
 import {
   prayerTimesFor, nextPrayer, countdownText,
 } from '../../lib/prayer';
+import { TYPICAL_JUMMAH, isFriday } from '../../lib/jummah';
 import { formatDistance, displayName } from '../../lib/geo';
 
 const PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
@@ -80,6 +81,15 @@ export default function Home() {
 
       {loc.status === 'ready' && prayer && times && (
         <>
+          {isFriday(now) && (
+            <View style={s.jummahBanner}>
+              <Text style={s.jummahBannerTitle}>Jumu&#8217;ah today</Text>
+              <Text style={s.jummahBannerText}>
+                Typical time {TYPICAL_JUMMAH} across Pakistan. Open your nearest
+                mosque for its reported time.
+              </Text>
+            </View>
+          )}
           <View style={s.hero}>
             <Text style={s.heroKicker}>NEXT PRAYER</Text>
             <Text style={s.heroName}>{prayer.name}</Text>
@@ -170,6 +180,11 @@ const s = StyleSheet.create({
     backgroundColor: C.emeraldDeep, borderRadius: 20, padding: 20,
     borderWidth: 1, borderColor: C.gold,
   },
+  jummahBanner: {
+    backgroundColor: C.gold, borderRadius: 16, padding: 14, marginBottom: 12,
+  },
+  jummahBannerTitle: { color: C.emeraldDeep, fontWeight: '800', fontSize: 15 },
+  jummahBannerText: { color: C.emeraldDeep, fontSize: 13, marginTop: 4, lineHeight: 18 },
   heroKicker: { color: C.gold, fontSize: 11, letterSpacing: 2, fontWeight: '700' },
   heroName: { fontFamily: 'Marcellus_400Regular', color: C.ivory, fontSize: 34, marginTop: 6 },
   heroCountdown: { color: C.goldSoft, fontSize: 30, fontWeight: '700', marginTop: 4, fontVariant: ['tabular-nums'] },

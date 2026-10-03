@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Alert } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { View, Text, TextInput, StyleSheet, ScrollView, Pressable, Linking, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import Logo from '../../components/Logo';
@@ -7,11 +7,22 @@ import { C } from '../../theme';
 import { useLocation } from '../../hooks/useLocation';
 import { useMosques } from '../../hooks/useMosques';
 import { haversineKm, formatDistance, displayName } from '../../lib/geo';
+import {
+  TYPICAL_JUMMAH, JUMMAH_TYPICAL_NOTE,
+  loadJummahCorrections, saveJummahCorrection, jummahFor,
+} from '../../lib/jummah';
 
 export default function MosqueDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const loc = useLocation();
   const mosques = useMosques();
+  const [corrections, setCorrections] = useState<Record<string, string>>({});
+  const [editingJummah, setEditingJummah] = useState(false);
+  const [jummahInput, setJummahInput] = useState('');
+
+  useEffect(() => {
+    loadJummahCorrections().then(setCorrections);
+  }, []);
 
   const mosque = useMemo(() => mosques.find((m) => m.src === id) ?? null, [mosques, id]);
 
@@ -40,6 +51,20 @@ export default function MosqueDetail() {
     );
   };
 
+  const jummah = jummahFor(mosque.src, corrections);
+
+  const submitJummah = async () => {
+    const t = jummahInput.trim();
+    if (!t) {
+      Alert.alert('Enter a time', 'Please type the Jumu\u2019ah time, for example "1:15 PM".');
+      return;
+    }
+    await saveJummahCorrection(mosque.src, t);
+    setCorrections((c) => ({ ...c, [mosque.src]: t }));
+    setEditingJummah(false);
+    setJummahInput('');
+  };
+
   return (
     <ScrollView style={s.root} contentContainerStyle={s.content}>
       <View style={s.hero}>
@@ -55,11 +80,45 @@ export default function MosqueDetail() {
         <Text style={s.primaryBtnText}>Get directions</Text>
       </Pressable>
 
+      <View style={s.jummah}>
+        <Text style={s.jummahLabel}>Jumu&#8217;ah (Friday prayer)</Text>
+        <Text style={s.jummahTime}>{jummah.time}</Text>
+        <Text style={s.jummahNote}>
+          {jummah.verified
+            ? 'Reported by a user who knows this mosque.'
+            : JUMMAH_TYPICAL_NOTE}
+        </Text>
+        {!editingJummah ? (
+          <Pressable style={s.jummahEdit} onPress={() => { setEditingJummah(true); setJummahInput(jummah.verified ? jummah.time : ''); }}>
+            <Text style={s.jummahEditText}>Know the exact time? Report it</Text>
+          </Pressable>
+        ) : (
+          <View style={s.jummahForm}>
+            <TextInput
+              style={s.jummahInput}
+              placeholder="e.g. 1:15 PM"
+              placeholderTextColor={C.muted}
+              value={jummahInput}
+              onChangeText={setJummahInput}
+            />
+            <View style={s.jummahFormRow}>
+              <Pressable style={s.jummahSave} onPress={submitJummah}>
+                <Text style={s.jummahSaveText}>Save</Text>
+              </Pressable>
+              <Pressable style={s.jummahCancel} onPress={() => setEditingJummah(false)}>
+                <Text style={s.jummahCancelText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </View>
+
       <View style={s.note}>
         <Text style={s.noteTitle}>Good to know</Text>
         <Text style={s.noteText}>
-          Jamaat and Jumu'ah times are announced by each mosque and are not listed
-          here. Please confirm prayer timings with the mosque directly.
+          Daily jamaat times are announced by each mosque and are not listed
+          here. Jumu&#8217;ah is shown above ({TYPICAL_JUMMAH} typical across
+          Pakistan) until someone who knows this mosque reports its exact time.
         </Text>
         <Text style={s.noteText}>
           Location from OpenStreetMap contributors. If this pin is wrong or this is
@@ -104,6 +163,32 @@ const s = StyleSheet.create({
     backgroundColor: C.emerald, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 14,
   },
   primaryBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  jummah: {
+    backgroundColor: C.emeraldDeep, borderRadius: 16, padding: 18, marginTop: 14,
+    borderWidth: 1, borderColor: C.gold, alignItems: 'center',
+  },
+  jummahLabel: { color: C.goldSoft, fontSize: 13, fontWeight: '600' },
+  jummahTime: {
+    fontFamily: 'Marcellus_400Regular', color: C.ivory, fontSize: 34, marginTop: 4,
+  },
+  jummahNote: { color: C.goldSoft, fontSize: 12, textAlign: 'center', marginTop: 6, lineHeight: 17 },
+  jummahEdit: { marginTop: 10, paddingVertical: 6, paddingHorizontal: 12 },
+  jummahEditText: { color: C.gold, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+  jummahForm: { width: '100%', marginTop: 10 },
+  jummahInput: {
+    backgroundColor: C.ivory, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11,
+    fontSize: 15, color: C.ink,
+  },
+  jummahFormRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  jummahSave: {
+    flex: 1, backgroundColor: C.gold, borderRadius: 10, paddingVertical: 11, alignItems: 'center',
+  },
+  jummahSaveText: { color: C.emeraldDeep, fontWeight: '700', fontSize: 15 },
+  jummahCancel: {
+    flex: 1, borderWidth: 1.5, borderColor: C.goldSoft, borderRadius: 10,
+    paddingVertical: 11, alignItems: 'center',
+  },
+  jummahCancelText: { color: C.goldSoft, fontWeight: '700', fontSize: 15 },
   note: {
     backgroundColor: '#fff', borderRadius: 16, padding: 16, marginTop: 14,
     borderWidth: 1, borderColor: C.line,
