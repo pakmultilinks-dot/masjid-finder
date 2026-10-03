@@ -143,8 +143,9 @@ export default function Home() {
           </View>
 
           <Text style={s.footnote}>
-            {mosques.length} mosques mapped in Lahore. Locations by OpenStreetMap contributors;
-            coverage is growing and may miss some mosques.
+            {mosques.length} mosques mapped in Lahore. Locations by OpenStreetMap
+            contributors and Google Maps verification; coverage is growing and may
+            miss some mosques.
           </Text>
         </>
       )}
