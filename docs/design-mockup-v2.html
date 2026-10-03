@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masjid Finder v2 - Design Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background: #2b2b2b; color: #1C1B1A; padding: 40px 20px; }
+  h1 { color: #F7F4EC; text-align: center; font-weight: 600; margin-bottom: 8px; }
+  .sub { color: #b9b3a5; text-align: center; margin-bottom: 36px; font-size: 15px; }
+  .row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
+  .phone { width: 300px; height: 640px; background: #F7F4EC; border-radius: 36px; overflow: hidden; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; }
+  .label { color: #F7F4EC; text-align: center; margin: 14px 0 26px; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+  .wrap { display: flex; flex-direction: column; align-items: center; }
+  /* splash */
+  .splash { background: linear-gradient(160deg, #0C5C40, #083D2B); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .appname { color: #F7F4EC; font-size: 30px; margin-top: 22px; letter-spacing: .5px; font-family: Georgia, serif; }
+  .tagline { color: #C6A15B; font-size: 14px; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; }
+  /* home */
+  .homehead { background: #0C5C40; padding: 20px 18px 26px; color: #fff; }
+  .homehead .mini { display: flex; align-items: center; gap: 10px; }
+  .homehead .t { font-family: Georgia, serif; font-size: 20px; }
+  .homehead .d { font-size: 12px; color: #cfe3d8; margin-top: 6px; }
+  .prayhero { margin: -0px 16px 0; background: linear-gradient(150deg, #0e6b4a, #083D2B); border-radius: 18px; padding: 20px; color: #fff; margin-top: -0px; box-shadow: 0 8px 20px rgba(8,61,43,.25); }
+  .prayhero .lbl { font-size: 11px; letter-spacing: 2px; color: #C6A15B; text-transform: uppercase; }
+  .prayhero .pname { font-family: Georgia, serif; font-size: 32px; margin: 6px 0 2px; }
+  .prayhero .count { font-size: 15px; color: #e8f0ea; }
+  .prayhero .mini-times { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); font-size: 11px; color: #cfe3d8; }
+  .card { background: #fff; border-radius: 16px; margin: 14px 16px 0; padding: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+  .card .k { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #6B675F; }
+  .card .mn { font-size: 19px; font-weight: 700; margin-top: 6px; }
+  .badge { display: inline-block; background: #e7f2ec; color: #0C5C40; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+  .btn { display: block; text-align: center; background: #0C5C40; color: #fff; border-radius: 12px; padding: 13px; font-weight: 700; margin-top: 12px; font-size: 15px; }
+  .btn.gold { background: #C6A15B; }
+  .actions { display: flex; gap: 10px; margin: 14px 16px 0; }
+  .act { flex: 1; background: #fff; border-radius: 14px; padding: 14px 6px; text-align: center; font-size: 12px; font-weight: 600; color: #0C5C40; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+  .footnote { font-size: 11px; color: #9a958a; text-align: center; margin: 16px 20px 0; line-height: 1.5; }
+  /* list */
+  .listhead { background: #0C5C40; padding: 20px 18px 16px; color: #fff; }
+  .listhead .t { font-family: Georgia, serif; font-size: 22px; }
+  .search { margin: 14px 16px 4px; background: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; color: #9a958a; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+  .mrow { background: #fff; border-radius: 14px; margin: 10px 16px 0; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+  .mrow .n { font-weight: 700; font-size: 15px; }
+  .mrow .c { font-size: 12px; color: #6B675F; margin-top: 3px; }
+  /* prayer */
+  .trow { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 14px; margin: 10px 16px 0; padding: 15px 18px; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+  .trow.next { background: linear-gradient(150deg, #0e6b4a, #083D2B); color: #fff; }
+  .trow.next .tn { color: #fff; }
+  .trow.next .tt { color: #C6A15B; }
+  .tn { font-size: 16px; font-weight: 600; }
+  .tt { font-size: 16px; font-weight: 700; color: #0C5C40; }
+  .pill { font-size: 10px; background: #C6A15B; color: #083D2B; font-weight: 800; padding: 3px 10px; border-radius: 12px; letter-spacing: 1px; }
+  /* tabbar */
+  .tabbar { margin-top: auto; display: flex; background: #fff; border-top: 1px solid #eee8da; padding: 10px 0 18px; }
+  .tab { flex: 1; text-align: center; font-size: 11px; color: #9a958a; font-weight: 600; }
+  .tab.on { color: #0C5C40; }
+  .tab svg { display: block; margin: 0 auto 3px; }
+</style>
+</head>
+<body>
+<h1>Masjid Finder v2 — Design Mockup</h1>
+<p class="sub">Deep emerald + gold + warm ivory. Bottom tabs. No developer text. Logo is a hand-drawn geometric mark.</p>
+<div class="row">
+
+  <div class="wrap"><div class="phone">
+    <div class="splash">
+      <svg width="110" height="110" viewBox="0 0 64 64">
+        <rect x="2" y="2" width="60" height="60" rx="16" fill="#0C5C40" stroke="#C6A15B" stroke-width="1.5"/>
+        <path d="M44 10 a10 10 0 1 0 7 17 a8 8 0 1 1 -7 -17" fill="#C6A15B"/>
+        <path d="M32 24 c-8 0 -14 6 -14 13 h28 c0 -7 -6 -13 -14 -13" fill="#F7F4EC"/>
+        <rect x="18" y="37" width="28" height="11" rx="1.5" fill="#F7F4EC"/>
+        <path d="M29 48 v-5 a3 3 0 0 1 6 0 v5" fill="#0C5C40"/>
+        <rect x="11" y="29" width="3.4" height="19" rx="1" fill="#F7F4EC"/>
+        <circle cx="12.7" cy="27" r="2.4" fill="#F7F4EC"/>
+        <rect x="49.6" y="29" width="3.4" height="19" rx="1" fill="#F7F4EC"/>
+        <circle cx="51.3" cy="27" r="2.4" fill="#F7F4EC"/>
+      </svg>
+      <div class="appname">Masjid Finder</div>
+      <div class="tagline">Find your nearest mosque</div>
+    </div>
+  </div><div class="label">1 · Splash</div></div>
+
+  <div class="wrap"><div class="phone">
+    <div class="homehead">
+      <div class="mini">
+        <svg width="26" height="26" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="16" fill="#F7F4EC"/><path d="M32 24 c-8 0 -14 6 -14 13 h28 c0 -7 -6 -13 -14 -13" fill="#0C5C40"/><rect x="18" y="37" width="28" height="11" rx="1.5" fill="#0C5C40"/></svg>
+        <div><div class="t">Masjid Finder</div><div class="d">Saturday, 3 October · Lahore</div></div>
+      </div>
+    </div>
+    <div class="prayhero">
+      <div class="lbl">Next prayer</div>
+      <div class="pname">Asr</div>
+      <div class="count">2h 14m left · 3:13 PM</div>
+      <div class="mini-times"><span>Fajr 4:37a</span><span>Sunrise 5:57a</span><span>Dhuhr 11:53a</span><span>Maghrib 5:45p</span><span>Isha 7:06p</span></div>
+    </div>
+    <div class="card">
+      <div class="k">Nearest mosque</div>
+      <div class="mn">Jamia Masjid e Muhammadi</div>
+      <span class="badge">68 m away</span>
+      <div class="btn">Get directions</div>
+    </div>
+    <div class="actions">
+      <div class="act">Find<br>mosques</div>
+      <div class="act">Prayer<br>times</div>
+      <div class="act">Suggest<br>a mosque</div>
+    </div>
+    <div class="footnote">Mosque locations: OpenStreetMap contributors.<br>Not every mosque is mapped yet.</div>
+    <div class="tabbar">
+      <div class="tab on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C5C40" stroke-width="2"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2z"/></svg>Home</div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a958a" stroke-width="2"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Mosques</div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a958a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Prayer</div>
+    </div>
+  </div><div class="label">2 · Home</div></div>
+
+  <div class="wrap"><div class="phone">
+    <div class="listhead"><div class="t">Nearby mosques</div></div>
+    <div class="search">Search by name...</div>
+    <div class="mrow"><div><div class="n">Jamia Masjid e Muhammadi</div><div class="c">Lahore</div></div><span class="badge">68 m</span></div>
+    <div class="mrow"><div><div class="n">M Block Mosque</div><div class="c">Lahore</div></div><span class="badge">1.3 km</span></div>
+    <div class="mrow"><div><div class="n">Masjid Al Aqsa</div><div class="c">Lahore</div></div><span class="badge">1.4 km</span></div>
+    <div class="mrow"><div><div class="n">Sec C Ph 1 Masjid</div><div class="c">Lahore</div></div><span class="badge">1.8 km</span></div>
+    <div class="mrow"><div><div class="n">Khalid Masjid</div><div class="c">Lahore</div></div><span class="badge">2.8 km</span></div>
+    <div class="tabbar">
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a958a" stroke-width="2"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2z"/></svg>Home</div>
+      <div class="tab on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C5C40" stroke-width="2"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Mosques</div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a958a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Prayer</div>
+    </div>
+  </div><div class="label">3 · Mosques</div></div>
+
+  <div class="wrap"><div class="phone">
+    <div class="listhead"><div class="t">Prayer times</div><div style="font-size:12px;color:#cfe3d8;margin-top:4px">Today · calculated for your location</div></div>
+    <div class="trow"><span class="tn">Fajr</span><span class="tt">4:37 AM</span></div>
+    <div class="trow"><span class="tn">Sunrise</span><span class="tt">5:57 AM</span></div>
+    <div class="trow"><span class="tn">Dhuhr</span><span class="tt">11:53 AM</span></div>
+    <div class="trow next"><span class="tn">Asr &nbsp;<span class="pill">NEXT</span></span><span class="tt">3:13 PM</span></div>
+    <div class="trow"><span class="tn">Maghrib</span><span class="tt">5:45 PM</span></div>
+    <div class="trow"><span class="tn">Isha</span><span class="tt">7:06 PM</span></div>
+    <div class="footnote">Karachi method. Not mosque jamaat times.</div>
+    <div class="tabbar">
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a958a" stroke-width="2"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2z"/></svg>Home</div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a958a" stroke-width="2"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Mosques</div>
+      <div class="tab on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C5C40" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Prayer</div>
+    </div>
+  </div><div class="label">4 · Prayer</div></div>
+
+</div>
+</body>
+</html>

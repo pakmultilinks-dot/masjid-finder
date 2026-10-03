@@ -1,132 +1,111 @@
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import * as Location from 'expo-location';
-import mosquesData from '../../data/mosques.json';
-import { Mosque, displayName, formatDistance, haversineKm } from '../../lib/geo';
-import { DayPrayerTimes, prayerTimesFor } from '../../lib/prayer';
-
-const MOSQUES = mosquesData as Mosque[];
+import * as Clipboard from 'expo-clipboard';
+import Logo from '../../components/Logo';
+import { C } from '../../theme';
+import { useLocation } from '../../hooks/useLocation';
+import { useMosques } from '../../hooks/useMosques';
+import { haversineKm, formatDistance, displayName } from '../../lib/geo';
 
 export default function MosqueDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const mosque = MOSQUES.find((m) => m.src === id);
-  const [distance, setDistance] = useState<number | null>(null);
-  const [times, setTimes] = useState<DayPrayerTimes | null>(null);
-  const [locFailed, setLocFailed] = useState(false);
+  const loc = useLocation();
+  const mosques = useMosques();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status !== 'granted' || !mosque) {
-          setLocFailed(true);
-          return;
-        }
-        const pos = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = pos.coords;
-        setDistance(haversineKm(latitude, longitude, mosque.lat, mosque.lon));
-        setTimes(prayerTimesFor(latitude, longitude));
-      } catch {
-        setLocFailed(true);
-      }
-    })();
-  }, [mosque]);
+  const mosque = useMemo(() => mosques.find((m) => m.src === id) ?? null, [mosques, id]);
 
   if (!mosque) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Mosque not found</Text>
+      <View style={s.center}>
+        <Text style={s.muted}>Mosque not found.</Text>
       </View>
     );
   }
 
+  const lat = loc.status === 'ready' ? loc.lat : null;
+  const lon = loc.status === 'ready' ? loc.lon : null;
+  const dist = lat != null && lon != null ? haversineKm(lat, lon, mosque.lat, mosque.lon) : null;
+
   const openDirections = () => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`;
-    Linking.openURL(url);
+    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`);
   };
 
-  const rows: Array<[string, string | undefined]> = times
-    ? [
-        ['Fajr', times.fajr],
-        ['Sunrise', times.sunrise],
-        ['Dhuhr', times.dhuhr],
-        ['Asr', times.asr],
-        ['Maghrib', times.maghrib],
-        ['Isha', times.isha],
-      ]
-    : [];
+  const report = async () => {
+    const text = `Correction for mosque in Masjid Finder:\nName: ${displayName(mosque)}\nLocation: ${mosque.lat}, ${mosque.lon}\nIssue: `;
+    await Clipboard.setStringAsync(text);
+    Alert.alert(
+      'Details copied',
+      'A correction template was copied. Paste it anywhere with the details of what is wrong.',
+    );
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.name}>{displayName(mosque)}</Text>
-      {distance !== null && (
-        <Text style={styles.distance}>{formatDistance(distance)} away</Text>
-      )}
-      <Text style={styles.coords}>
-        {mosque.lat.toFixed(5)}, {mosque.lon.toFixed(5)}
-      </Text>
+    <ScrollView style={s.root} contentContainerStyle={s.content}>
+      <View style={s.hero}>
+        <Logo size={64} />
+        <Text style={s.name}>{displayName(mosque)}</Text>
+        <View style={s.metaRow}>
+          {dist != null && <Text style={s.dist}>{formatDistance(dist)} away</Text>}
+          {mosque.userAdded && <Text style={s.badge}>Added by you</Text>}
+        </View>
+      </View>
 
-      <Pressable style={styles.button} onPress={openDirections}>
-        <Text style={styles.buttonText}>Get directions</Text>
+      <Pressable style={s.primaryBtn} onPress={openDirections}>
+        <Text style={s.primaryBtnText}>Get directions</Text>
       </Pressable>
 
-      <Text style={styles.section}>Prayer times today</Text>
-      {!times && !locFailed && <ActivityIndicator color="#0d5c3f" style={{ marginTop: 8 }} />}
-      {locFailed && (
-        <Text style={styles.disclaimer}>
-          Enable location access to see your distance and today's prayer times.
+      <View style={s.note}>
+        <Text style={s.noteTitle}>Good to know</Text>
+        <Text style={s.noteText}>
+          Jamaat and Jumu'ah times are announced by each mosque and are not listed
+          here. Please confirm prayer timings with the mosque directly.
         </Text>
-      )}
-      {rows.map(([label, value]) => (
-        <View key={label} style={styles.timeRow}>
-          <Text style={styles.timeLabel}>{label}</Text>
-          <Text style={styles.timeValue}>{value}</Text>
-        </View>
-      ))}
-      <Text style={styles.disclaimer}>
-        Calculated for your location (University of Islamic Sciences, Karachi method).
-        These are not this mosque's announced jamaat times.
-      </Text>
-      <Text style={styles.disclaimer}>
-        Location: OpenStreetMap contributors. Not every mosque is mapped yet.
-      </Text>
+        <Text style={s.noteText}>
+          Location from OpenStreetMap contributors. If this pin is wrong or this is
+          not a mosque, you can report it below.
+        </Text>
+      </View>
+
+      <Pressable style={s.ghostBtn} onPress={report}>
+        <Text style={s.ghostBtnText}>Report wrong info</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  name: { fontSize: 22, fontWeight: '800', color: '#0d5c3f' },
-  distance: { fontSize: 16, fontWeight: '700', color: '#111', marginTop: 6 },
-  coords: { fontSize: 13, color: '#888', marginTop: 4 },
-  title: { fontSize: 18, fontWeight: '700' },
-  button: {
-    backgroundColor: '#0d5c3f',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.ivory },
+  content: { padding: 16, paddingBottom: 32 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.ivory },
+  muted: { color: C.muted, fontSize: 14 },
+  hero: {
+    backgroundColor: C.emeraldDeep, borderRadius: 20, padding: 22, alignItems: 'center',
+    borderWidth: 1, borderColor: C.gold,
   },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  section: { fontSize: 18, fontWeight: '700', color: '#111', marginTop: 24, marginBottom: 8 },
-  timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  name: {
+    fontFamily: 'Marcellus_400Regular', color: C.ivory, fontSize: 24,
+    textAlign: 'center', marginTop: 12,
   },
-  timeLabel: { fontSize: 16, color: '#333' },
-  timeValue: { fontSize: 16, fontWeight: '600', color: '#111' },
-  disclaimer: { fontSize: 12, color: '#777', marginTop: 12, lineHeight: 17 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  dist: { color: C.goldSoft, fontSize: 14 },
+  badge: {
+    backgroundColor: C.gold, color: C.emeraldDeep, fontSize: 10, fontWeight: '800',
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+  },
+  primaryBtn: {
+    backgroundColor: C.emerald, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 14,
+  },
+  primaryBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  note: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginTop: 14,
+    borderWidth: 1, borderColor: C.line,
+  },
+  noteTitle: { fontWeight: '700', fontSize: 15, color: C.ink, marginBottom: 8 },
+  noteText: { color: C.muted, fontSize: 13.5, lineHeight: 20, marginBottom: 8 },
+  ghostBtn: {
+    borderWidth: 1.5, borderColor: C.emerald, borderRadius: 14,
+    paddingVertical: 13, alignItems: 'center', marginTop: 14,
+  },
+  ghostBtnText: { color: C.emerald, fontWeight: '700', fontSize: 15 },
 });
