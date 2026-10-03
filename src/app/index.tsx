@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { Link } from 'expo-router';
@@ -25,6 +26,7 @@ const MOSQUES = mosquesData as Mosque[];
 export default function Index() {
   const [status, setStatus] = useState<Status>('loading');
   const [nearby, setNearby] = useState<MosqueWithDistance[]>([]);
+  const [query, setQuery] = useState('');
   const [total] = useState(MOSQUES.length);
 
   const locate = async () => {
@@ -83,14 +85,26 @@ export default function Index() {
     );
   }
 
+  const visible = query.trim()
+    ? nearby.filter((m) =>
+        displayName(m).toLowerCase().includes(query.trim().toLowerCase())
+      )
+    : nearby;
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Nearest mosques</Text>
       <Text style={styles.sub}>
         {total} mapped mosques in Lahore (OpenStreetMap). Sorted by true distance.
       </Text>
+      <TextInput
+        style={styles.search}
+        placeholder="Search by name..."
+        value={query}
+        onChangeText={setQuery}
+      />
       <FlatList
-        data={nearby}
+        data={visible}
         keyExtractor={(item) => item.src}
         renderItem={({ item }) => (
           <Link href={`/mosque/${encodeURIComponent(item.src)}`} asChild>
@@ -131,4 +145,13 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: '600', color: '#111' },
   coords: { fontSize: 12, color: '#888', marginTop: 2 },
   distance: { fontSize: 15, fontWeight: '700', color: '#0d5c3f' },
+  search: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    marginBottom: 8,
+  },
 });
