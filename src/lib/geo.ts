@@ -1,7 +1,7 @@
-// Real mosque location data: OpenStreetMap contributors
-// (amenity=place_of_worship + religion=muslim, building=mosque, and name-verified entries).
-// Collected and cleaned 2026-10-03 for Lahore. 466 mapped mosques, 396 named.
-// Coverage note: OSM does not map every mosque. Only real mapped data is shipped, nothing invented.
+// Real mosque location data: OpenStreetMap contributors (Pakistan extract,
+// amenity=place_of_worship + religion=muslim, building=mosque, name-verified
+// entries) plus manually Google-Maps-verified additions.
+// Cleaned 2026-10-03: junk POIs removed, 60m dedupe. Nothing invented.
 export interface Mosque {
   src: string;
   lat: number;

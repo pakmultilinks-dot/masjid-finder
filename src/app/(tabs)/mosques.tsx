@@ -41,7 +41,7 @@ export default function Mosques() {
     <View style={s.root}>
       <View style={s.top}>
         <Text style={s.title}>Mosques</Text>
-        <Text style={s.sub}>{mosques.length} mapped in Lahore</Text>
+        <Text style={s.sub}>{mosques.length.toLocaleString()} mapped across Pakistan</Text>
         <TextInput
           style={s.search}
           placeholder="Search by name..."
