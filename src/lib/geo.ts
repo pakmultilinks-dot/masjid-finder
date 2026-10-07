@@ -32,6 +32,46 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
 }
 
 /**
+ * Get real road distance and duration from OSRM (free, no API key).
+ * Returns {distanceKm, durationMin} or null if the service fails.
+ * Mode: 'foot' (walking), 'bike' (cycling), 'driving' (car)
+ *
+ * Note: the public OSRM demo server returns the same geometry for all
+ * profiles, so we use its accurate road DISTANCE but compute realistic
+ * durations from typical speeds per mode.
+ */
+export async function osrmRoute(
+  fromLat: number,
+  fromLon: number,
+  toLat: number,
+  toLon: number,
+  mode: 'foot' | 'bike' | 'driving' = 'foot'
+): Promise<{ distanceKm: number; durationMin: number } | null> {
+  // Typical speeds in km/h for each mode (Lahore city conditions)
+  const SPEEDS: Record<string, number> = {
+    foot: 5,      // walking
+    bike: 15,     // cycling
+    driving: 30,  // car in city traffic
+  };
+
+  try {
+    const url =
+      `https://router.project-osrm.org/route/v1/foot/` +
+      `${fromLon},${fromLat};${toLon},${toLat}?overview=false`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes?.[0]) return null;
+    const distanceKm = data.routes[0].distance / 1000;
+    const speedKmh = SPEEDS[mode] ?? 5;
+    const durationMin = (distanceKm / speedKmh) * 60;
+    return { distanceKm, durationMin };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get real walking road distance from OSRM (free, no API key).
  * Returns distance in km, or null if the service fails.
  */
@@ -41,19 +81,41 @@ export async function osrmWalkingKm(
   toLat: number,
   toLon: number
 ): Promise<number | null> {
-  try {
-    const url =
-      `https://router.project-osrm.org/route/v1/foot/` +
-      `${fromLon},${fromLat};${toLon},${toLat}?overview=false`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.code !== 'Ok' || !data.routes?.[0]) return null;
-    // OSRM returns meters
-    return data.routes[0].distance / 1000;
-  } catch {
-    return null;
-  }
+  const result = await osrmRoute(fromLat, fromLon, toLat, toLon, 'foot');
+  return result?.distanceKm ?? null;
+}
+
+/**
+ * Get all three travel modes (walk, bike, car) from OSRM.
+ * Returns null for modes that fail.
+ */
+export async function osrmAllModes(
+  fromLat: number,
+  fromLon: number,
+  toLat: number,
+  toLon: number
+): Promise<{
+  walk: { distanceKm: number; durationMin: number } | null;
+  bike: { distanceKm: number; durationMin: number } | null;
+  car: { distanceKm: number; durationMin: number } | null;
+}> {
+  const [walk, bike, car] = await Promise.all([
+    osrmRoute(fromLat, fromLon, toLat, toLon, 'foot'),
+    osrmRoute(fromLat, fromLon, toLat, toLon, 'bike'),
+    osrmRoute(fromLat, fromLon, toLat, toLon, 'driving'),
+  ]);
+  return { walk, bike, car };
+}
+
+/**
+ * Format a duration in minutes like Google Maps: "4 min", "1 hr 5 min"
+ */
+export function formatDuration(min: number): string {
+  if (min < 1) return 'less than a min';
+  if (min < 60) return `${Math.round(min)} min`;
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
 }
 
 /**

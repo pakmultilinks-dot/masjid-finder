@@ -6,7 +6,7 @@ import Logo from '../../components/Logo';
 import { C } from '../../theme';
 import { useLocation } from '../../hooks/useLocation';
 import { useMosques } from '../../hooks/useMosques';
-import { haversineKm, osrmWalkingKm, formatDistance, displayName } from '../../lib/geo';
+import { haversineKm, osrmWalkingKm, osrmAllModes, formatDistance, formatDuration, displayName } from '../../lib/geo';
 import {
   TYPICAL_JUMMAH, JUMMAH_TYPICAL_NOTE,
   loadJummahCorrections, saveJummahCorrection, jummahFor,
@@ -37,16 +37,25 @@ export default function MosqueDetail() {
   const lat = loc.status === 'ready' ? loc.lat : null;
   const lon = loc.status === 'ready' ? loc.lon : null;
   const [roadDist, setRoadDist] = useState<number | null>(null);
+  const [travelModes, setTravelModes] = useState<{
+    walk: { distanceKm: number; durationMin: number } | null;
+    bike: { distanceKm: number; durationMin: number } | null;
+    car: { distanceKm: number; durationMin: number } | null;
+  } | null>(null);
 
-  // Fetch real walking distance for this mosque
+  // Fetch real walking distance and all travel modes for this mosque
   useEffect(() => {
     if (lat == null || lon == null || !mosque) {
       setRoadDist(null);
+      setTravelModes(null);
       return;
     }
     let cancelled = false;
-    osrmWalkingKm(lat, lon, mosque.lat, mosque.lon).then((d) => {
-      if (!cancelled) setRoadDist(d);
+    osrmAllModes(lat, lon, mosque.lat, mosque.lon).then((modes) => {
+      if (!cancelled) {
+        setTravelModes(modes);
+        setRoadDist(modes.walk?.distanceKm ?? null);
+      }
     });
     return () => {
       cancelled = true;
@@ -98,6 +107,38 @@ export default function MosqueDetail() {
       <Pressable style={s.primaryBtn} onPress={openDirections}>
         <Text style={s.primaryBtnText}>Get directions</Text>
       </Pressable>
+
+      {travelModes && (travelModes.walk || travelModes.bike || travelModes.car) && (
+        <View style={s.travelModes}>
+          <Text style={s.travelTitle}>Travel time</Text>
+          <View style={s.travelRow}>
+            {travelModes.walk && (
+              <View style={s.travelItem}>
+                <Text style={s.travelIcon}>🚶</Text>
+                <Text style={s.travelTime}>{formatDuration(travelModes.walk.durationMin)}</Text>
+                <Text style={s.travelDist}>{formatDistance(travelModes.walk.distanceKm)}</Text>
+                <Text style={s.travelLabel}>Walk</Text>
+              </View>
+            )}
+            {travelModes.bike && (
+              <View style={s.travelItem}>
+                <Text style={s.travelIcon}>🚲</Text>
+                <Text style={s.travelTime}>{formatDuration(travelModes.bike.durationMin)}</Text>
+                <Text style={s.travelDist}>{formatDistance(travelModes.bike.distanceKm)}</Text>
+                <Text style={s.travelLabel}>Bike</Text>
+              </View>
+            )}
+            {travelModes.car && (
+              <View style={s.travelItem}>
+                <Text style={s.travelIcon}>🚗</Text>
+                <Text style={s.travelTime}>{formatDuration(travelModes.car.durationMin)}</Text>
+                <Text style={s.travelDist}>{formatDistance(travelModes.car.distanceKm)}</Text>
+                <Text style={s.travelLabel}>Car</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
 
       <View style={s.jummah}>
         <Text style={s.jummahLabel}>Jumu&#8217;ah (Friday prayer)</Text>
@@ -182,6 +223,17 @@ const s = StyleSheet.create({
     backgroundColor: C.emerald, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 14,
   },
   primaryBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  travelModes: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginTop: 14,
+    borderWidth: 1, borderColor: C.line,
+  },
+  travelTitle: { fontWeight: '700', fontSize: 15, color: C.ink, marginBottom: 12 },
+  travelRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  travelItem: { alignItems: 'center', flex: 1 },
+  travelIcon: { fontSize: 28, marginBottom: 4 },
+  travelTime: { fontWeight: '700', fontSize: 16, color: C.emeraldDeep },
+  travelDist: { fontSize: 13, color: C.muted, marginTop: 2 },
+  travelLabel: { fontSize: 12, color: C.muted, marginTop: 2 },
   jummah: {
     backgroundColor: C.emeraldDeep, borderRadius: 16, padding: 18, marginTop: 14,
     borderWidth: 1, borderColor: C.gold, alignItems: 'center',
