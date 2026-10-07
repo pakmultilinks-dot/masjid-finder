@@ -26,14 +26,6 @@ export default function MosqueDetail() {
 
   const mosque = useMemo(() => mosques.find((m) => m.src === id) ?? null, [mosques, id]);
 
-  if (!mosque) {
-    return (
-      <View style={s.center}>
-        <Text style={s.muted}>Mosque not found.</Text>
-      </View>
-    );
-  }
-
   const lat = loc.status === 'ready' ? loc.lat : null;
   const lon = loc.status === 'ready' ? loc.lon : null;
   const [roadDist, setRoadDist] = useState<number | null>(null);
@@ -52,6 +44,14 @@ export default function MosqueDetail() {
       cancelled = true;
     };
   }, [lat, lon, mosque?.src]);
+
+  if (!mosque) {
+    return (
+      <View style={s.center}>
+        <Text style={s.muted}>Mosque not found.</Text>
+      </View>
+    );
+  }
 
   const havDist = lat != null && lon != null && mosque ? haversineKm(lat, lon, mosque.lat, mosque.lon) : null;
   // Use accurate road distance if available, otherwise fall back to haversine
