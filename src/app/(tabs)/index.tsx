@@ -7,6 +7,7 @@ import Logo from '../../components/Logo';
 import { C } from '../../theme';
 import { useLocation } from '../../hooks/useLocation';
 import { useNearest, useMosques } from '../../hooks/useMosques';
+import { useRoadDistances } from '../../hooks/useRoadDistances';
 import {
   prayerTimesFor, nextPrayer, countdownText,
 } from '../../lib/prayer';
@@ -34,7 +35,8 @@ export default function Home() {
 
   const lat = loc.status === 'ready' ? loc.lat : null;
   const lon = loc.status === 'ready' ? loc.lon : null;
-  const nearest = useNearest(lat, lon, 3);
+  const nearestRaw = useNearest(lat, lon, 3);
+  const nearest = useRoadDistances(nearestRaw, lat, lon, 3);
 
   const prayer = useMemo(
     () => (lat != null && lon != null ? nextPrayer(lat, lon, now) : null),

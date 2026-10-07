@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { C } from '../../theme';
 import { useLocation } from '../../hooks/useLocation';
 import { useNearest, useMosques } from '../../hooks/useMosques';
+import { useRoadDistances } from '../../hooks/useRoadDistances';
 import { formatDistance, displayName, searchableText, type MosqueWithDistance } from '../../lib/geo';
 
 export default function Mosques() {
@@ -17,12 +18,14 @@ export default function Mosques() {
   const lat = loc.status === 'ready' ? loc.lat : null;
   const lon = loc.status === 'ready' ? loc.lon : null;
   const sorted = useNearest(lat, lon, mosques.length);
+  // Enrich top 15 with real OSRM walking distances
+  const withRoads = useRoadDistances(sorted, lat, lon, 15);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return sorted;
-    return sorted.filter((m) => searchableText(m).includes(q));
-  }, [sorted, query]);
+    if (!q) return withRoads;
+    return withRoads.filter((m) => searchableText(m).includes(q));
+  }, [withRoads, query]);
 
   const renderItem = ({ item }: { item: MosqueWithDistance }) => (
     <Pressable style={s.card} onPress={() => router.push(`/mosque/${item.src}`)}>

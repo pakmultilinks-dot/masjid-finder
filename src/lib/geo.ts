@@ -14,6 +14,8 @@ export interface Mosque {
 
 export interface MosqueWithDistance extends Mosque {
   distanceKm: number;
+  /** True if distanceKm is a real road/walking distance from OSRM, false if straight-line haversine */
+  roadDistance?: boolean;
 }
 
 const R_KM = 6371.0;
@@ -27,6 +29,61 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
     Math.sin(dp / 2) * Math.sin(dp / 2) +
     Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
   return 2 * R_KM * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Get real walking road distance from OSRM (free, no API key).
+ * Returns distance in km, or null if the service fails.
+ */
+export async function osrmWalkingKm(
+  fromLat: number,
+  fromLon: number,
+  toLat: number,
+  toLon: number
+): Promise<number | null> {
+  try {
+    const url =
+      `https://router.project-osrm.org/route/v1/foot/` +
+      `${fromLon},${fromLat};${toLon},${toLat}?overview=false`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes?.[0]) return null;
+    // OSRM returns meters
+    return data.routes[0].distance / 1000;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Enrich a list of mosques (already sorted by haversine) with real OSRM
+ * walking distances. Only the first `count` get road distances to stay fast.
+ * Falls back to haversine for the rest or on failure.
+ */
+export async function withRoadDistances(
+  mosques: MosqueWithDistance[],
+  fromLat: number,
+  fromLon: number,
+  count: number = 10
+): Promise<MosqueWithDistance[]> {
+  const top = mosques.slice(0, count);
+  const rest = mosques.slice(count);
+
+  const enriched = await Promise.all(
+    top.map(async (m) => {
+      const roadKm = await osrmWalkingKm(fromLat, fromLon, m.lat, m.lon);
+      if (roadKm !== null) {
+        return { ...m, distanceKm: roadKm, roadDistance: true };
+      }
+      return { ...m, roadDistance: false };
+    })
+  );
+
+  // Re-sort by the (possibly updated) distances
+  return [...enriched, ...rest.map((m) => ({ ...m, roadDistance: false }))].sort(
+    (a, b) => a.distanceKm - b.distanceKm
+  );
 }
 
 export function formatDistance(km: number): string {
