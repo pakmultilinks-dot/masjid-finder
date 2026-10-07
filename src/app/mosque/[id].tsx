@@ -6,7 +6,7 @@ import Logo from '../../components/Logo';
 import { C } from '../../theme';
 import { useLocation } from '../../hooks/useLocation';
 import { useMosques } from '../../hooks/useMosques';
-import { haversineKm, formatDistance, displayName } from '../../lib/geo';
+import { haversineKm, osrmWalkingKm, formatDistance, displayName } from '../../lib/geo';
 import {
   TYPICAL_JUMMAH, JUMMAH_TYPICAL_NOTE,
   loadJummahCorrections, saveJummahCorrection, jummahFor,
@@ -36,7 +36,26 @@ export default function MosqueDetail() {
 
   const lat = loc.status === 'ready' ? loc.lat : null;
   const lon = loc.status === 'ready' ? loc.lon : null;
-  const dist = lat != null && lon != null ? haversineKm(lat, lon, mosque.lat, mosque.lon) : null;
+  const [roadDist, setRoadDist] = useState<number | null>(null);
+
+  // Fetch real walking distance for this mosque
+  useEffect(() => {
+    if (lat == null || lon == null || !mosque) {
+      setRoadDist(null);
+      return;
+    }
+    let cancelled = false;
+    osrmWalkingKm(lat, lon, mosque.lat, mosque.lon).then((d) => {
+      if (!cancelled) setRoadDist(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lat, lon, mosque?.src]);
+
+  const havDist = lat != null && lon != null && mosque ? haversineKm(lat, lon, mosque.lat, mosque.lon) : null;
+  // Use road distance if available, otherwise fall back to haversine
+  const dist = roadDist ?? havDist;
 
   const openDirections = () => {
     Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`);
